@@ -1,0 +1,7 @@
+{
+    "claudeCode.useTerminal": true,
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit"
+    }
+}
