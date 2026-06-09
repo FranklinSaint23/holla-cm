@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -43,7 +44,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return;
     }
 
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
 
     try {
       await ref.read(authServiceProvider).register(
@@ -65,312 +69,430 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: HollaColors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              // ── Header ────────────────────────────────────────
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(32, 40, 32, 36),
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [HollaColors.primary, HollaColors.primaryDark],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft:  Radius.circular(40),
-                    bottomRight: Radius.circular(40),
-                  ),
-                ),
-                child: Stack(
-                  children: [
-                    Positioned(
-                      top: -30, right: -30,
-                      child: Container(
-                        width: 140, height: 140,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.07),
-                        ),
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Bouton retour
-                        GestureDetector(
-                          onTap: () => context.go('/auth/login'),
-                          child: Container(
-                            width: 40, height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.arrow_back_rounded,
-                              color: Colors.white, size: 20,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        const Text(
-                          'Créer un compte',
-                          style: TextStyle(
-                            fontSize: 26, fontWeight: FontWeight.w700,
-                            color: Colors.white, fontFamily: 'Poppins',
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Rejoignez la communauté HOLLA',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.white.withOpacity(0.8),
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+      backgroundColor: const Color(0xFFF1FBFF), // Arrière-plan clair
+      body: Stack(
+        children: [
+          // ─── FOND DE PAGE SÉCURISÉ (MUTLIPLES COUCHES) ───
+          Positioned.fill(
+            child: Container(
+              color: const Color(0xFFF1FBFF),
+            ),
+          ),
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.08, // Légèrement augmenté pour assurer la visibilité
+              child: Image.asset(
+                'assets/images/global.png', 
+                repeat: ImageRepeat.repeat,
+                alignment: Alignment.center,
+                errorBuilder: (context, error, stackTrace) {
+                  // Log en console si l'image crash pour t'alerter
+                  debugPrint("Erreur chargement global.png: $error");
+                  return const SizedBox.shrink();
+                },
               ),
+            ),
+          ),
 
-              // ── Formulaire ────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
+          SafeArea(
+            top: false, 
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                children: [
+                  // ─── HEADER IMMERSIF ───
+                  Stack(
                     children: [
-                      const SizedBox(height: 8),
-
-                      if (_error != null) ...[
-                        Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: HollaColors.errorLight,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: HollaColors.error.withOpacity(0.3),
-                            ),
+                      Container(
+                        height: 240,
+                        width: double.infinity,
+                        decoration: const BoxDecoration(
+                          borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(40),
+                            bottomRight: Radius.circular(40),
                           ),
-                          child: Row(
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 10,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            bottomLeft: Radius.circular(40),
+                            bottomRight: Radius.circular(40),
+                          ),
+                          child: Stack(
+                            fit: StackFit.expand,
                             children: [
-                              const Icon(Icons.error_outline_rounded,
-                                color: HollaColors.error, size: 18),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(_error!,
-                                  style: const TextStyle(
-                                    color: HollaColors.error, fontSize: 13,
-                                    fontFamily: 'Poppins',
-                                  ),
+                              Image.asset(
+                                'assets/images/local.png',
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                                  color: HollaColors.primary,
                                 ),
                               ),
+                              Container(color: Colors.black.withOpacity(0.55)), 
                             ],
                           ),
                         ),
-                        const SizedBox(height: 16),
-                      ],
-
-                      // Nom complet
-                      HollaTextField(
-                        controller: _nameController,
-                        label: 'Nom complet',
-                        hint: 'Jean Kamdem',
-                        prefixIcon: Icons.person_outline_rounded,
-                        validator: (v) {
-                          if (v == null || v.trim().length < 2)
-                            return 'Nom requis (min 2 caractères)';
-                          return null;
-                        },
                       ),
-                      const SizedBox(height: 14),
-
-                      // Email
-                      HollaTextField(
-                        controller: _emailController,
-                        label: 'Email',
-                        hint: 'votre@email.com',
-                        prefixIcon: Icons.mail_outline_rounded,
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (v) {
-                          if (v == null || !v.contains('@'))
-                            return 'Email invalide';
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 14),
-
-                      // Téléphone camerounais
-                      HollaTextField(
-                        controller: _phoneController,
-                        label: 'Téléphone',
-                        hint: '677 123 456',
-                        prefixIcon: Icons.phone_outlined,
-                        prefix: const Text(
-                          '+237  ',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                            color: HollaColors.dark,
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
-                        keyboardType: TextInputType.phone,
-                        maxLength: 9,
-                        validator: (v) {
-                          if (v == null || !RegExp(r'^6[5-9]\d{7}$').hasMatch(v))
-                            return 'Numéro invalide. Ex: 677123456';
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 14),
-
-                      // Mot de passe
-                      HollaTextField(
-                        controller: _passwordController,
-                        label: 'Mot de passe',
-                        hint: 'Minimum 8 caractères',
-                        prefixIcon: Icons.lock_outline_rounded,
-                        obscureText: !_showPassword,
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _showPassword
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                            color: HollaColors.grey500,
-                          ),
-                          onPressed: () =>
-                              setState(() => _showPassword = !_showPassword),
-                        ),
-                        validator: (v) {
-                          if (v == null || v.length < 8)
-                            return 'Minimum 8 caractères';
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 14),
-
-                      // Confirmer mot de passe
-                      HollaTextField(
-                        controller: _confirmController,
-                        label: 'Confirmer le mot de passe',
-                        hint: '••••••••',
-                        prefixIcon: Icons.lock_outline_rounded,
-                        obscureText: true,
-                        validator: (v) {
-                          if (v != _passwordController.text)
-                            return 'Les mots de passe ne correspondent pas';
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // CGU
-                      GestureDetector(
-                        onTap: () =>
-                            setState(() => _acceptTerms = !_acceptTerms),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              width: 22, height: 22,
-                              decoration: BoxDecoration(
-                                color: _acceptTerms
-                                    ? HollaColors.primary
-                                    : Colors.transparent,
-                                border: Border.all(
-                                  color: _acceptTerms
-                                      ? HollaColors.primary
-                                      : HollaColors.grey300,
-                                  width: 2,
-                                ),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: _acceptTerms
-                                  ? const Icon(Icons.check_rounded,
-                                      color: Colors.white, size: 14)
-                                  : null,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: RichText(
-                                text: const TextSpan(
-                                  text: "J'accepte les ",
-                                  style: TextStyle(
-                                    color: HollaColors.grey700,
-                                    fontSize: 13,
-                                    fontFamily: 'Poppins',
+                      Positioned.fill(
+                        child: SafeArea(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const SizedBox(height: 10),
+                                Image.asset(
+                                  'assets/images/logo.jpeg', // Ton logo local
+                                  height: 50,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (_, __, ___) => const CircleAvatar(
+                                    backgroundColor: Colors.white24,
+                                    child: Icon(Icons.apps, color: Colors.white),
                                   ),
-                                  children: [
-                                    TextSpan(
-                                      text: "Conditions d'utilisation",
-                                      style: TextStyle(
-                                        color: HollaColors.primary,
-                                        fontWeight: FontWeight.w600,
+                                ),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'Créer un compte',
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    fontFamily: 'Montserrat',
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Inscrivez-vous pour commencer votre expérience avec Holla',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.white.withOpacity(0.85),
+                                    fontFamily: 'Inter',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 50,
+                        left: 20,
+                        child: GestureDetector(
+                          onTap: () => context.go('/auth/login'),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.white30),
+                                ),
+                                child: const Icon(
+                                  Icons.arrow_back_rounded,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // ─── CARD PRINCIPALE ───
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 10),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.95),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: Colors.white.withOpacity(0.4)),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 20,
+                            offset: Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (_error != null) ...[
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFFDAD6), 
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: const Color(0x4DBA1A1A)),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.error_outline_rounded, color: Color(0xFFBA1A1A), size: 20),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          _error!,
+                                          style: const TextStyle(color: Color(0xFFBA1A1A), fontSize: 13, fontFamily: 'Inter'),
+                                        ),
                                       ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                              ],
+
+                              HollaTextField(
+                                controller: _nameController,
+                                label: 'Nom complet',
+                                hint: 'Alex Douala',
+                                prefixIcon: Icons.person_outline_rounded,
+                                validator: (v) {
+                                  if (v == null || v.trim().length < 2) {
+                                    return 'Nom requis (min 2 caractères)';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 14),
+
+                              HollaTextField(
+                                controller: _emailController,
+                                label: 'Email',
+                                hint: 'alex@exemple.cm',
+                                prefixIcon: Icons.mail_outline_rounded,
+                                keyboardType: TextInputType.emailAddress,
+                                validator: (v) {
+                                  if (v == null || !v.contains('@')) {
+                                    return 'Email invalide';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 14),
+
+                              // Champ Téléphone
+                              HollaTextField(
+                                controller: _phoneController,
+                                label: 'Numéro de téléphone',
+                                hint: '6XX XXX XXX',
+                                prefixIcon: Icons.phone_outlined,
+                                prefix: const Padding(
+                                  padding: EdgeInsets.only(right: 8.0),
+                                  child: Text(
+                                    '+237',
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black87),
+                                  ),
+                                ),
+                                keyboardType: TextInputType.phone,
+                                maxLength: 9,
+                                validator: (v) {
+                                  if (v == null || !RegExp(r'^6[5-9]\d{7}$').hasMatch(v)) {
+                                    return 'Numéro invalide. Ex: 677123456';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 14),
+
+                              HollaTextField(
+                                controller: _passwordController,
+                                label: 'Mot de passe',
+                                hint: '••••••••',
+                                prefixIcon: Icons.lock_outline_rounded,
+                                obscureText: !_showPassword,
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                    color: Colors.grey,
+                                  ),
+                                  onPressed: () => setState(() => _showPassword = !_showPassword),
+                                ),
+                                validator: (v) {
+                                  if (v == null || v.length < 8) {
+                                    return 'Minimum 8 caractères';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 14),
+
+                              HollaTextField(
+                                controller: _confirmController,
+                                label: 'Confirmer le mot de passe',
+                                hint: '••••••••',
+                                prefixIcon: Icons.lock_reset_rounded,
+                                obscureText: true,
+                                validator: (v) {
+                                  if (v != _passwordController.text) {
+                                    return 'Les mots de passe ne correspondent pas';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 18),
+
+                              GestureDetector(
+                                onTap: () => setState(() => _acceptTerms = !_acceptTerms),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    AnimatedContainer(
+                                      duration: const Duration(milliseconds: 200),
+                                      width: 20,
+                                      height: 20,
+                                      decoration: BoxDecoration(
+                                        color: _acceptTerms ? const Color(0xFF5341CD) : Colors.transparent,
+                                        border: Border.all(
+                                          color: _acceptTerms ? const Color(0xFF5341CD) : Colors.grey.shade400,
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: _acceptTerms
+                                          ? const Icon(Icons.check_rounded, color: Colors.white, size: 14)
+                                          : null,
                                     ),
-                                    TextSpan(text: ' et la '),
-                                    TextSpan(
-                                      text: 'Politique de confidentialité',
-                                      style: TextStyle(
-                                        color: HollaColors.primary,
-                                        fontWeight: FontWeight.w600,
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: RichText(
+                                        text: const TextSpan(
+                                          text: "J'accepte les ",
+                                          style: TextStyle(color: Colors.black54, fontSize: 13, fontFamily: 'Inter'),
+                                          children: [
+                                            TextSpan(
+                                              text: "Conditions d'utilisation",
+                                              style: TextStyle(color: Color(0xFF5341CD), fontWeight: FontWeight.bold),
+                                            ),
+                                            TextSpan(text: ' et la '),
+                                            TextSpan(
+                                              text: 'Politique de confidentialité',
+                                              style: TextStyle(color: Color(0xFF5341CD), fontWeight: FontWeight.bold),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 24),
+
+                              HollaButton(
+                                label: "S'inscrire",
+                                loading: _loading,
+                                onPressed: _handleRegister,
+                              ),
+                              const SizedBox(height: 24),
+
+                              Row(
+                                children: const [
+                                  Expanded(child: Divider(color: Colors.black12, thickness: 1)),
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 16),
+                                    child: Text(
+                                      'OU S\'INSCRIRE AVEC',
+                                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.grey, letterSpacing: 1.2),
+                                    ),
+                                  ),
+                                  Expanded(child: Divider(color: Colors.black12, thickness: 1)),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+
+                              // Boutons sociaux
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _buildSocialButton(imagePath: 'assets/icons/google.png'),
+                                  const SizedBox(width: 20),
+                                  _buildSocialButton(imagePath: 'assets/icons/apple.png'),
+                                  const SizedBox(width: 20),
+                                  _buildSocialButton(imagePath: 'assets/icons/face.png'),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 24),
-
-                      // Bouton inscription
-                      HollaButton(
-                        label: "Créer mon compte",
-                        loading: _loading,
-                        onPressed: _handleRegister,
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Lien connexion
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            "Déjà un compte ? ",
-                            style: TextStyle(
-                              color: HollaColors.grey500,
-                              fontFamily: 'Poppins',
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () => context.go('/auth/login'),
-                            child: const Text(
-                              'Se connecter',
-                              style: TextStyle(
-                                color: HollaColors.primary,
-                                fontWeight: FontWeight.w700,
-                                fontFamily: 'Poppins',
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                    ],
+                    ),
                   ),
-                ),
+
+                  // ─── LIEN VERS LOGIN ───
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          "Vous avez déjà un compte ? ",
+                          style: TextStyle(color: Colors.grey, fontFamily: 'Inter'),
+                        ),
+                        GestureDetector(
+                          onTap: () => context.go('/auth/login'),
+                          child: const Text(
+                            'Se connecter',
+                            style: TextStyle(
+                              color: Color(0xFF5341CD),
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSocialButton({required String imagePath}) {
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0D000000), 
+            blurRadius: 6, 
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Image.asset(
+          imagePath, 
+          width: 28, 
+          height: 28,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            debugPrint("Erreur icône ($imagePath): $error");
+            return const Icon(Icons.star_border, color: Colors.grey);
+          },
         ),
       ),
     );

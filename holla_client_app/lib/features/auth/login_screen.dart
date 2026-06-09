@@ -1,8 +1,8 @@
+import 'dart:ui'; // Nécessaire pour l'effet de flou BackdropFilter
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/colors.dart';
-import '../../core/constants/text_styles.dart';
 import '../../shared/providers/auth_provider.dart';
 import '../../shared/widgets/holla_button.dart';
 import '../../shared/widgets/holla_text_field.dart';
@@ -55,107 +55,123 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Style Gojek : Fond d'application très légèrement grisé pour faire ressortir les éléments blancs
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9F9),
-      body: SafeArea(
-        top: false, // Permet au dégradé du header de monter jusqu'en haut de l'écran
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              // ── Header Dégradé Style Gojek Super-App ─────────────────
-              Container(
-                width: double.infinity,
-                height: 290,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [HollaColors.primary, HollaColors.primaryDark],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(32),
-                    bottomRight: Radius.circular(32),
-                  ),
-                ),
-                child: Stack(
+      // Arrière-plan global
+      backgroundColor: const Color(0xFFF1FBFF),
+      body: Container(
+        height: double.infinity,
+        width: double.infinity,
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/global.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: SafeArea(
+          top: false, // Permet à l'image du haut de monter jusqu'en haut de l'écran
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                // ── 1. HEADER IMMERSIF (Image du marché + Logo + Titres) ──
+                Stack(
                   children: [
-                    // Motifs de cercles d'arrière-plan géométriques et épurés
-                    Positioned(
-                      top: -50,
-                      right: -30,
-                      child: Container(
-                        width: 200,
-                        height: 200,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.06),
+                    Container(
+                      height: 320,
+                      width: double.infinity,
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(32),
+                          bottomRight: Radius.circular(32),
+                        ),
+                        image: DecorationImage(
+                          image: AssetImage('assets/images/local.png'),
+                          fit: BoxFit.cover,
                         ),
                       ),
                     ),
-                    Positioned(
-                      bottom: 20,
-                      left: -40,
-                      child: Container(
-                        width: 130,
-                        height: 130,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.04),
+                    // Overlay sombre pour la lisibilité du texte
+                    Container(
+                      height: 320,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(32),
+                          bottomRight: Radius.circular(32),
                         ),
+                        color: Colors.black.withOpacity(0.4),
                       ),
                     ),
-                    // Contenu du Header
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 60, 24, 24),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    // Boutons de contrôle supérieurs (Langue & Thème)
+                    Positioned(
+                      top: MediaQuery.of(context).padding.top + 10,
+                      right: 16,
+                      child: Row(
                         children: [
-                          // Emplacement de l'image du logo (Remplaçant le texte 'H')
-                          Container(
-                            width: 64,
-                            height: 64,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(18),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.08),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 6),
-                                ),
+                          _buildHeaderButton(
+                            child: const Row(
+                              children: [
+                                Icon(Icons.translate, size: 16, color: Color(0xFF474554)),
+                                SizedBox(width: 4),
+                                Text('FR', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF474554))),
                               ],
                             ),
-                            padding: const EdgeInsets.all(10),
+                            onTap: () {/* Logique de langue */},
+                          ),
+                          const SizedBox(width: 8),
+                          _buildHeaderButton(
+                            child: const Icon(Icons.wb_sunny_outlined, size: 18, color: Color(0xFF474554)),
+                            onTap: () {/* Logique de thème */},
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Contenu textuel et illustration
+                    Positioned(
+                      bottom: 40,
+                      left: 0,
+                      right: 0,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Conteneur de l'illustration
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                             child: Image.asset(
-                              'assets/images/logo.jpeg', // Chemin de votre image
+                              'assets/images/logo.jpeg',
+                              height: 50,
                               fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) {
-                                // Fallback visuel élégant si l'image est manquante au premier build
-                                return const Center(
-                                  child: Icon(Icons.local_shipping_rounded, color: HollaColors.primary, size: 32),
-                                );
-                              },
                             ),
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 12),
                           const Text(
-                            'Bienvenue sur HOLLA 👋',
+                            'Holla',
                             style: TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w700,
+                              fontSize: 36,
+                              fontWeight: FontWeight.bold,
                               color: Colors.white,
-                              fontFamily: 'Poppins',
+                              fontFamily: 'Montserrat',
                             ),
                           ),
-                          const SizedBox(height: 6),
+                          const Text(
+                            'Bon retour !',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              fontFamily: 'Montserrat',
+                            ),
+                          ),
+                          const SizedBox(height: 4),
                           Text(
-                            'La livraison urbaine intelligente et rapide',
+                            'Connectez-vous pour continuer à naviguer.',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.white.withOpacity(0.85),
-                              fontFamily: 'Poppins',
+                              color: Colors.white.withOpacity(0.9),
+                              fontFamily: 'Inter',
                             ),
                           ),
                         ],
@@ -163,252 +179,253 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ],
                 ),
-              ),
 
-              // ── Section Formulaire et Actions ────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Message d'erreur API
-                      if (_error != null) ...[
-                        Container(
-                          padding: const EdgeInsets.all(14),
+                // ── 2. CARTE EN VERRE FLOUTÉ (Glassmorphism Form) ──
+                Transform.translate(
+                  offset: const Offset(0, -24), // Remonte sur l'image du haut
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(28),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                        child: Container(
+                          padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
-                            color: HollaColors.errorLight,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: HollaColors.error.withOpacity(0.2)),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.error_outline_rounded, color: HollaColors.error, size: 18),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  _error!,
-                                  style: const TextStyle(
-                                    color: HollaColors.error,
-                                    fontSize: 13,
-                                    fontFamily: 'Poppins',
-                                  ),
-                                ),
-                              ),
+                            color: Colors.white.withOpacity(0.92),
+                            borderRadius: BorderRadius.circular(28),
+                            border: Border.all(color: Colors.white.withOpacity(0.5)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.08),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              )
                             ],
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Message d'erreur dynamique de Supabase
+                                if (_error != null) ...[
+                                  _buildErrorWidget(),
+                                  const SizedBox(height: 16),
+                                ],
 
-                      // Formulaire regroupé dans une carte blanche style Gojek
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFFEAEAEA)),
-                        ),
-                        child: Column(
-                          children: [
-                            HollaTextField(
-                              controller: _emailController,
-                              label: 'Email',
-                              hint: 'votre@email.com',
-                              prefixIcon: Icons.mail_outline_rounded,
-                              keyboardType: TextInputType.emailAddress,
-                              validator: (v) {
-                                if (v == null || v.isEmpty) return 'Email requis';
-                                if (!v.contains('@')) return 'Email invalide';
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            HollaTextField(
-                              controller: _passwordController,
-                              label: 'Mot de passe',
-                              hint: '••••••••',
-                              prefixIcon: Icons.lock_outline_rounded,
-                              obscureText: !_showPassword,
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                                  color: HollaColors.grey500,
+                                // Champ Email / Téléphone (Correction : suppression du doublon de label textuel)
+                                HollaTextField(
+                                  label: 'Email ou Téléphone',
+                                  controller: _emailController,
+                                  hint: 'votre@email.com',
+                                  keyboardType: TextInputType.emailAddress,
+                                  validator: (v) {
+                                    if (v == null || v.isEmpty) return 'Ce champ est requis';
+                                    return null;
+                                  },
                                 ),
-                                onPressed: () => setState(() => _showPassword = !_showPassword),
-                              ),
-                              validator: (v) {
-                                if (v == null || v.isEmpty) return 'Mot de passe requis';
-                                if (v.length < 6) return 'Minimum 6 caractères';
-                                return null;
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      
-                      // Mot de passe oublié
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () {},
-                          child: const Text(
-                            'Mot de passe oublié ?',
-                            style: TextStyle(
-                              color: HollaColors.primary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                              fontFamily: 'Poppins',
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
+                                const SizedBox(height: 20),
 
-                      // Bouton de connexion principal
-                      HollaButton(
-                        label: 'Se connecter',
-                        loading: _loading,
-                        onPressed: _handleLogin,
-                      ),
-                      const SizedBox(height: 28),
-
-                      // Séparateur épuré
-                      Row(
-                        children: [
-                          const Expanded(child: Divider(color: Color(0xFFEAEAEA), thickness: 1)),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Text(
-                              'ou continuer avec',
-                              style: TextStyle(
-                                color: Colors.grey[500],
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                fontFamily: 'Poppins',
-                              ),
-                            ),
-                          ),
-                          const Expanded(child: Divider(color: Color(0xFFEAEAEA), thickness: 1)),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-
-                      // ── Grille des Boutons Sociaux (Style Gojek ID) ─────────────────
-                      Row(
-                        children: [
-                          // Google Button
-                          Expanded(
-                            child: _buildSocialButton(
-                              label: 'Google',
-                              iconWidget: const Text(
-                                'G',
-                                style: TextStyle(
-                                  fontSize: 18, 
-                                  fontWeight: FontWeight.bold, 
-                                  color: Color(0xFFDB4437),
-                                  fontFamily: 'Poppins',
+                                // Ligne d'options pour le Mot de passe oublié
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () {/* Logique mot de passe oublié */},
+                                      child: const Text(
+                                        'Mot de passe oublié ?',
+                                        style: TextStyle(
+                                          color: Color(0xFF5341CD),
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              onPressed: () {},
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          // Facebook Button
-                          Expanded(
-                            child: _buildSocialButton(
-                              label: 'Facebook',
-                              iconWidget: const Icon(
-                                Icons.facebook,
-                                color: Color(0xFF1877F2),
-                                size: 22,
-                              ),
-                              onPressed: () {},
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      
-                      // Apple Button (Plein écran en dessous car très utilisé sur mobile)
-                      _buildSocialButton(
-                        label: 'Continuer avec Apple',
-                        iconWidget: const Icon(
-                          Icons.apple,
-                          color: Colors.black,
-                          size: 22,
-                        ),
-                        onPressed: () {},
-                        isFullWidth: true,
-                      ),
-                      
-                      const SizedBox(height: 36),
+                                const SizedBox(height: 6),
 
-                      // Zone d'inscription
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            "Pas encore de compte ? ",
-                            style: TextStyle(color: HollaColors.grey500, fontFamily: 'Poppins'),
-                          ),
-                          GestureDetector(
-                            onTap: () => context.go('/auth/register'),
-                            child: const Text(
-                              'Créer un compte',
-                              style: TextStyle(
-                                color: HollaColors.primary,
-                                fontWeight: FontWeight.w700,
-                                fontFamily: 'Poppins',
+                                // Champ Mot de passe (Correction : suppression du doublon de label textuel)
+                                HollaTextField(
+                                  label: 'Mot de passe',
+                                  controller: _passwordController,
+                                  hint: '••••••••',
+                                  obscureText: !_showPassword,
+                                  validator: (v) {
+                                    if (v == null || v.isEmpty) return 'Mot de passe requis';
+                                    return null;
+                                  },
+                                  // Optionnel : Ajoute un suffixIcon si ton HollaTextField personnalisé le gère, 
+                                  // pour permettre de changer l'état de `_showPassword` au clic.
+                                ),
+                                const SizedBox(height: 24),
+
+                                // Bouton Soumettre
+                                HollaButton(
+                                  label: 'Se connecter',
+                                  loading: _loading,
+                                  onPressed: _handleLogin,
+                                ),
+                                const SizedBox(height: 24),
+
+                                // Séparateur "OU CONTINUER AVEC"
+                                Row(
+                                  children: [
+                                    const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                                      child: Text(
+                                        'OU CONTINUER AVEC',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: const Color(0xFF474554).withOpacity(0.5),
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ),
+                                    const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                                  ],
+                                ),
+                                const SizedBox(height: 20),
+
+                                // Boutons Sociaux (Google, Apple, Facebook)
+                                Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _buildSocialButton(
+                                    imagePath: 'assets/icons/google.png',
+                                    onTap: () {
+                                      // TODO: handle Google sign-in
+                                    },
+                                  ),
+                                  const SizedBox(width: 20),
+                                  _buildSocialButton(
+                                    imagePath: 'assets/icons/apple.png',
+                                    isApple: true,
+                                    onTap: () {
+                                      // TODO: handle Apple sign-in
+                                    },
+                                  ),
+                                  const SizedBox(width: 20),
+                                  _buildSocialButton(
+                                    imagePath: 'assets/icons/face.png',
+                                    onTap: () {
+                                      // TODO: handle Facebook sign-in
+                                    },
+                                  ),
+                                ],
                               ),
+                                const SizedBox(height: 24),
+
+                                // Pied de page de la carte
+                                Center(
+                                  child: Column(
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          const Text("Vous n'avez pas de compte ? ", style: TextStyle(color: Color(0xFF474554))),
+                                          GestureDetector(
+                                            onTap: () => context.go('/auth/register'),
+                                            child: const Text(
+                                              "S'inscrire",
+                                              style: TextStyle(
+                                                color: Color(0xFF5341CD),
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                                        child: Text(
+                                          "EN CONTINUANT, VOUS ACCEPTEZ NOS CONDITIONS ET NOTRE POLITIQUE DE CONFIDENTIALITÉ.",
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.w600,
+                                            color: const Color(0xFF474554).withOpacity(0.5),
+                                            height: 1.4,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                      const SizedBox(height: 24),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  // Composant réutilisable pour structurer les boutons réseaux sociaux
-  Widget _buildSocialButton({
-    required String label,
-    required Widget iconWidget,
-    required VoidCallback onPressed,
-    bool isFullWidth = false,
-  }) {
-    return OutlinedButton(
-      onPressed: onPressed,
-      style: OutlinedButton.styleFrom(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        side: const BorderSide(color: Color(0xFFEAEAEA)),
-        minimumSize: Size(isFullWidth ? double.infinity : 0, 48),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 0,
+  // Helper Widget : Boutons d'en-tête (Langue, Thème)
+  Widget _buildHeaderButton({required Widget child, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.8),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFC8C4D7).withOpacity(0.3)),
+        ),
+        child: child,
+      ),
+    );
+  }
+
+  // Helper Widget : Boutons de connexion sociale
+  Widget _buildSocialButton({String? imagePath, IconData? iconData, Color? iconColor, bool isApple = false, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: isApple ? Colors.white : null,
+          border: Border.all(color: const Color(0xFFC8C4D7)),
+        ),
+        child: Center(
+          child: imagePath != null
+              ? Image.asset(imagePath, width: 26, height: 26)
+              : Icon(iconData, size: 32, color: isApple ? Colors.white : iconColor), // Augmenté légèrement la taille pour l'impact visuel
+        ),
+      ),
+    );
+  }
+
+  // Helper Widget : Alerte Erreur Supabase
+  Widget _buildErrorWidget() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFDAD6),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFBA1A1A).withOpacity(0.3)),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: isFullWidth ? MainAxisSize.max : MainAxisSize.min,
         children: [
-          iconWidget,
+          const Icon(Icons.error_outline_rounded, color: Color(0xFFBA1A1A), size: 20),
           const SizedBox(width: 10),
-          Text(
-            label,
-            style: const TextStyle(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-              color: Color(0xFF2A2A2A),
+          Expanded(
+            child: Text(
+              _error!,
+              style: const TextStyle(color: Color(0xFFBA1A1A), fontSize: 13, fontWeight: FontWeight.w500),
             ),
           ),
         ],
