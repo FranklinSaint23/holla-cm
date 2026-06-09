@@ -146,14 +146,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const SizedBox(height: 10),
-                                Image.asset(
-                                  'assets/images/logo.jpeg', // Ton logo local
-                                  height: 50,
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (_, __, ___) => const CircleAvatar(
-                                    backgroundColor: Colors.white24,
-                                    child: Icon(Icons.apps, color: Colors.white),
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Image.asset(
+                                    'assets/images/logo.jpeg',
+                                    height: 50,
+                                    fit: BoxFit.contain,
                                   ),
                                 ),
                                 const SizedBox(height: 8),

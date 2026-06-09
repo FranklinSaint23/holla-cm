@@ -148,7 +148,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                           const SizedBox(height: 12),
                           const Text(
-                            'Holla',
+                            'Hôlla',
                             style: TextStyle(
                               fontSize: 36,
                               fontWeight: FontWeight.bold,
