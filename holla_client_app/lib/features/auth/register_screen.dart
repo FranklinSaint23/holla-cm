@@ -80,7 +80,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           ),
           Positioned.fill(
             child: Opacity(
-              opacity: 0.08, // Légèrement augmenté pour assurer la visibilité
+              opacity: 1, // Légèrement augmenté pour assurer la visibilité
               child: Image.asset(
                 'assets/images/global.png', 
                 repeat: ImageRepeat.repeat,

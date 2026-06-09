@@ -1,7 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../main.dart';
 import '../models/order_model.dart';
-import '../models/product_model.dart';
+import '../models/product_model.dart'; // <─── Import direct et propre
 
 class OrderService {
   // ── Produits d'un partenaire ─────────────────────────────
@@ -32,21 +32,26 @@ class OrderService {
     const deliveryFee = 500;
     final total       = subtotal + deliveryFee;
 
+    // Préparation de la localisation géospatiale PostGIS si disponible
+    String? locationWkt;
+    if (deliveryLng != null && deliveryLat != null) {
+      locationWkt = 'POINT($deliveryLng $deliveryLat)';
+    }
+
     // Créer la commande
     final orderData = await supabase.from('orders').insert({
-      'client_id':       userId,
-      'partner_id':      partnerId,
-      'status':          'pending',
-      'total_amount':    total,
-      'delivery_fee':    deliveryFee,
-      'delivery_address': deliveryAddress,
-      'delivery_lat':    deliveryLat,
-      'delivery_lng':    deliveryLng,
-      'notes':           notes,
-      'idempotency_key': '${userId}_${DateTime.now().millisecondsSinceEpoch}',
+      'client_id':         userId,
+      'partner_id':        partnerId,
+      'status':            'pending',
+      'total_amount':      total,
+      'delivery_fee':      deliveryFee,
+      'delivery_address':  deliveryAddress,
+      'delivery_location': locationWkt, // Aligné avec ton schéma PostGIS geography
+      'notes':             notes,
+      'idempotency_key':   '${userId}_${DateTime.now().millisecondsSinceEpoch}',
     }).select().single();
 
-    // Créer les articles
+    // Créer les articles de la commande (L'erreur sur i.product.id disparait !)
     final orderItems = items.map((i) => {
       'order_id':   orderData['id'],
       'product_id': i.product.id,

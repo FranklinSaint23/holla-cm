@@ -1,11 +1,7 @@
-class ProductModel {
-  final int price;
-
-  ProductModel({required this.price});
-}
+import 'product_model.dart'; // <─── On importe le vrai ProductModel complet
 
 class CartItem {
-  final ProductModel product;
+  final ProductModel product; // <─── Utilise le vrai modèle complet désormais
   int quantity;
 
   CartItem({required this.product, this.quantity = 1});

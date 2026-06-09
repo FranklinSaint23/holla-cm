@@ -44,7 +44,7 @@ class PaymentService {
     });
 
     // Mode sandbox si pas de clé
-    final publicKey = const String.fromEnvironment('NOTCHPAY_KEY');
+    const publicKey = String.fromEnvironment('NOTCHPAY_KEY');
     if (publicKey.isEmpty) {
       // Simuler succès en sandbox
       await Future.delayed(const Duration(seconds: 2));

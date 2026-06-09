@@ -7,6 +7,7 @@ import '../../../core/models/product_model.dart';
 import '../../../core/services/order_service.dart';
 import '../../../core/services/partner_service.dart';
 import '../../../shared/providers/cart_provider.dart';
+import '../../../core/models/order_model.dart';
 
 final partnerDetailProvider = FutureProvider.family<PartnerModel, String>(
   (ref, id) => PartnerService().getPartnerById(id),
@@ -22,9 +23,9 @@ class PartnerDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final partner  = ref.watch(partnerDetailProvider(partnerId));
+    final partner = ref.watch(partnerDetailProvider(partnerId));
     final products = ref.watch(productsProvider(partnerId));
-    final cart     = ref.watch(cartProvider);
+    final cart = ref.watch(cartProvider);
     final cartNotifier = ref.read(cartProvider.notifier);
 
     return Scaffold(
@@ -52,7 +53,7 @@ class PartnerDetailScreen extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(Icons.arrow_back_rounded,
-                        color: HollaColors.dark),
+                          color: HollaColors.dark),
                     ),
                   ),
                   flexibleSpace: FlexibleSpaceBar(
@@ -64,7 +65,7 @@ class PartnerDetailScreen extends ConsumerWidget {
                             : Container(
                                 color: HollaColors.primaryLight,
                                 child: const Icon(Icons.storefront_rounded,
-                                  color: HollaColors.primary, size: 64),
+                                    color: HollaColors.primary, size: 64),
                               ),
                         // Gradient overlay
                         const DecoratedBox(
@@ -72,8 +73,7 @@ class PartnerDetailScreen extends ConsumerWidget {
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
-                              colors: [Colors.transparent,
-                                       Color(0x99000000)],
+                              colors: [Colors.transparent, Color(0x99000000)],
                             ),
                           ),
                         ),
@@ -93,23 +93,27 @@ class PartnerDetailScreen extends ConsumerWidget {
                         Row(
                           children: [
                             Expanded(
-                              child: Text(p.businessName,
+                              child: Text(
+                                p.businessName,
                                 style: const TextStyle(
-                                  fontSize: 22, fontWeight: FontWeight.w700,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w700,
                                   fontFamily: 'Poppins',
                                 ),
                               ),
                             ),
                             if (p.isVerified)
                               const Icon(Icons.verified_rounded,
-                                color: HollaColors.info, size: 22),
+                                  color: HollaColors.info, size: 22),
                           ],
                         ),
                         const SizedBox(height: 6),
-                        Text(p.address,
+                        Text(
+                          p.address,
                           style: const TextStyle(
                             color: HollaColors.grey500,
-                            fontFamily: 'Poppins', fontSize: 13,
+                            fontFamily: 'Poppins',
+                            fontSize: 13,
                           ),
                         ),
                         const SizedBox(height: 14),
@@ -138,7 +142,8 @@ class PartnerDetailScreen extends ConsumerWidget {
                             const Spacer(),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6,
+                                horizontal: 12,
+                                vertical: 6,
                               ),
                               decoration: BoxDecoration(
                                 color: p.isOpen
@@ -152,7 +157,8 @@ class PartnerDetailScreen extends ConsumerWidget {
                                   color: p.isOpen
                                       ? HollaColors.success
                                       : HollaColors.error,
-                                  fontSize: 12, fontWeight: FontWeight.w700,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
                                   fontFamily: 'Poppins',
                                 ),
                               ),
@@ -163,7 +169,8 @@ class PartnerDetailScreen extends ConsumerWidget {
                           const SizedBox(height: 10),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6,
+                              horizontal: 12,
+                              vertical: 6,
                             ),
                             decoration: BoxDecoration(
                               color: HollaColors.primaryLight,
@@ -172,7 +179,8 @@ class PartnerDetailScreen extends ConsumerWidget {
                             child: Text(
                               'Commande min. ${p.minOrder} FCFA',
                               style: const TextStyle(
-                                color: HollaColors.primary, fontSize: 12,
+                                color: HollaColors.primary,
+                                fontSize: 12,
                                 fontWeight: FontWeight.w600,
                                 fontFamily: 'Poppins',
                               ),
@@ -210,7 +218,7 @@ class PartnerDetailScreen extends ConsumerWidget {
                     return SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, i) {
-                          final cat  = categories.keys.elementAt(i);
+                          final cat = categories.keys.elementAt(i);
                           final list = categories[cat]!;
                           return _ProductSection(
                             category: cat,
@@ -244,7 +252,9 @@ class PartnerDetailScreen extends ConsumerWidget {
             // ── PANIER FLOTTANT GOJEK-STYLE ──────────────────
             if (cart.isNotEmpty)
               Positioned(
-                bottom: 20, left: 20, right: 20,
+                bottom: 20,
+                left: 20,
+                right: 20,
                 child: _CartBar(
                   cartNotifier: cartNotifier,
                   partnerId: partnerId,
@@ -262,7 +272,8 @@ class _StatChip extends StatelessWidget {
   final IconData icon;
   final Color color;
   final String label;
-  const _StatChip({required this.icon, required this.color, required this.label});
+  const _StatChip(
+      {required this.icon, required this.color, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -277,10 +288,13 @@ class _StatChip extends StatelessWidget {
         children: [
           Icon(icon, color: color, size: 14),
           const SizedBox(width: 4),
-          Text(label, style: TextStyle(
-            color: color, fontSize: 12,
-            fontWeight: FontWeight.w600, fontFamily: 'Poppins',
-          )),
+          Text(label,
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Poppins',
+              )),
         ],
       ),
     );
@@ -316,8 +330,10 @@ class _ProductSection extends StatelessWidget {
             child: Text(
               category,
               style: const TextStyle(
-                fontSize: 15, fontWeight: FontWeight.w700,
-                color: HollaColors.dark, fontFamily: 'Poppins',
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: HollaColors.dark,
+                fontFamily: 'Poppins',
               ),
             ),
           ),
@@ -370,7 +386,9 @@ class _ProductTile extends StatelessWidget {
             child: product.imageUrl != null
                 ? Image.network(
                     product.imageUrl!,
-                    width: 80, height: 80, fit: BoxFit.cover,
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => _placeholder(),
                   )
                 : _placeholder(),
@@ -382,28 +400,36 @@ class _ProductTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(product.name,
+                Text(
+                  product.name,
                   style: const TextStyle(
-                    fontSize: 14, fontWeight: FontWeight.w600,
-                    color: HollaColors.dark, fontFamily: 'Poppins',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: HollaColors.dark,
+                    fontFamily: 'Poppins',
                   ),
                 ),
                 if (product.description != null) ...[
                   const SizedBox(height: 3),
-                  Text(product.description!,
+                  Text(
+                    product.description!,
                     style: const TextStyle(
-                      fontSize: 12, color: HollaColors.grey500,
+                      fontSize: 12,
+                      color: HollaColors.grey500,
                       fontFamily: 'Poppins',
                     ),
-                    maxLines: 2, overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
                 const SizedBox(height: 8),
                 Text(
                   '${product.price} FCFA',
                   style: const TextStyle(
-                    fontSize: 15, fontWeight: FontWeight.w700,
-                    color: HollaColors.primary, fontFamily: 'Poppins',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: HollaColors.primary,
+                    fontFamily: 'Poppins',
                   ),
                 ),
               ],
@@ -418,10 +444,13 @@ class _ProductTile extends StatelessWidget {
                 color: HollaColors.errorLight,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Text('Indisponible',
+              child: const Text(
+                'Indisponible',
                 style: TextStyle(
-                  color: HollaColors.error, fontSize: 11,
-                  fontWeight: FontWeight.w600, fontFamily: 'Poppins',
+                  color: HollaColors.error,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Poppins',
                 ),
               ),
             )
@@ -429,19 +458,21 @@ class _ProductTile extends StatelessWidget {
             GestureDetector(
               onTap: onAdd,
               child: Container(
-                width: 36, height: 36,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
                   color: HollaColors.primary,
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
                       color: HollaColors.primary.withOpacity(0.3),
-                      blurRadius: 8, offset: const Offset(0, 3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
                 child: const Icon(Icons.add_rounded,
-                  color: Colors.white, size: 20),
+                    color: Colors.white, size: 20),
               ),
             )
           else
@@ -450,34 +481,39 @@ class _ProductTile extends StatelessWidget {
                 GestureDetector(
                   onTap: onRemove,
                   child: Container(
-                    width: 32, height: 32,
+                    width: 32,
+                    height: 32,
                     decoration: BoxDecoration(
                       border: Border.all(color: HollaColors.primary),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(Icons.remove_rounded,
-                      color: HollaColors.primary, size: 16),
+                        color: HollaColors.primary, size: 16),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Text('$quantity',
+                  child: Text(
+                    '$quantity',
                     style: const TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.w700,
-                      color: HollaColors.dark, fontFamily: 'Poppins',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: HollaColors.dark,
+                      fontFamily: 'Poppins',
                     ),
                   ),
                 ),
                 GestureDetector(
                   onTap: onAdd,
                   child: Container(
-                    width: 32, height: 32,
+                    width: 32,
+                    height: 32,
                     decoration: BoxDecoration(
                       color: HollaColors.primary,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(Icons.add_rounded,
-                      color: Colors.white, size: 16),
+                        color: Colors.white, size: 16),
                   ),
                 ),
               ],
@@ -488,14 +524,15 @@ class _ProductTile extends StatelessWidget {
   }
 
   Widget _placeholder() => Container(
-    width: 80, height: 80,
-    decoration: BoxDecoration(
-      color: HollaColors.primaryLight,
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: const Icon(Icons.fastfood_rounded,
-      color: HollaColors.primary, size: 32),
-  );
+        width: 80,
+        height: 80,
+        decoration: BoxDecoration(
+          color: HollaColors.primaryLight,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(Icons.fastfood_rounded,
+            color: HollaColors.primary, size: 32),
+      );
 }
 
 // ── BARRE PANIER FLOTTANTE ────────────────────────────────
@@ -510,7 +547,7 @@ class _CartBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cart  = ref.watch(cartProvider);
+    final cart = ref.watch(cartProvider);
     final total = ref.watch(cartTotalProvider);
     final count = cartNotifier.totalItems;
 
@@ -526,7 +563,8 @@ class _CartBar extends ConsumerWidget {
           boxShadow: [
             BoxShadow(
               color: HollaColors.primary.withOpacity(0.4),
-              blurRadius: 20, offset: const Offset(0, 8),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
@@ -534,16 +572,20 @@ class _CartBar extends ConsumerWidget {
           children: [
             // Badge count
             Container(
-              width: 28, height: 28,
+              width: 28,
+              height: 28,
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.25),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Center(
-                child: Text('$count',
+                child: Text(
+                  '$count',
                   style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.w800,
-                    fontSize: 13, fontFamily: 'Poppins',
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                    fontFamily: 'Poppins',
                   ),
                 ),
               ),
@@ -552,21 +594,25 @@ class _CartBar extends ConsumerWidget {
             const Text(
               'Voir le panier',
               style: TextStyle(
-                color: Colors.white, fontWeight: FontWeight.w600,
-                fontSize: 15, fontFamily: 'Poppins',
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+                fontFamily: 'Poppins',
               ),
             ),
             const Spacer(),
             Text(
               '$total FCFA',
               style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.w800,
-                fontSize: 15, fontFamily: 'Poppins',
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+                fontSize: 15,
+                fontFamily: 'Poppins',
               ),
             ),
             const SizedBox(width: 8),
             const Icon(Icons.arrow_forward_ios_rounded,
-              color: Colors.white70, size: 14),
+                color: Colors.white70, size: 14),
           ],
         ),
       ),
@@ -624,10 +670,10 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
     setState(() => _loading = true);
 
     try {
-      final cart  = ref.read(cartProvider);
+      final cart = ref.read(cartProvider);
       final order = await OrderService().createOrder(
-        partnerId:       widget.partnerId,
-        items:           cart,
+        partnerId: widget.partnerId,
+        items: cart,
         deliveryAddress: _addressController.text.trim(),
       );
 
@@ -636,8 +682,8 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
       if (mounted) {
         Navigator.pop(context);
         context.push('/payment', extra: {
-          'orderId':     order.id,
-          'amount':      order.totalAmount - order.deliveryFee,
+          'orderId': order.id,
+          'amount': order.totalAmount - order.deliveryFee,
           'deliveryFee': order.deliveryFee,
         });
       }
@@ -657,7 +703,7 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final cart  = ref.watch(cartProvider);
+    final cart = ref.watch(cartProvider);
     final total = ref.watch(cartTotalProvider);
 
     return Container(
@@ -674,7 +720,8 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
           // Handle
           Container(
             margin: const EdgeInsets.only(top: 12),
-            width: 40, height: 4,
+            width: 40,
+            height: 4,
             decoration: BoxDecoration(
               color: HollaColors.grey300,
               borderRadius: BorderRadius.circular(2),
@@ -684,9 +731,11 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
             child: Row(
               children: [
-                const Text('Mon Panier',
+                const Text(
+                  'Mon Panier',
                   style: TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
                     fontFamily: 'Poppins',
                   ),
                 ),
@@ -696,9 +745,11 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
                     widget.cartNotifier.clear();
                     Navigator.pop(context);
                   },
-                  child: const Text('Vider',
+                  child: const Text(
+                    'Vider',
                     style: TextStyle(
-                      color: HollaColors.error, fontFamily: 'Poppins',
+                      color: HollaColors.error,
+                      fontFamily: 'Poppins',
                     ),
                   ),
                 ),
@@ -708,24 +759,30 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
 
           // Articles
           ...cart.map((item) => ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-            title: Text(item.product.name,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600, fontFamily: 'Poppins',
-              ),
-            ),
-            subtitle: Text('${item.product.price} FCFA × ${item.quantity}',
-              style: const TextStyle(
-                color: HollaColors.grey500, fontFamily: 'Poppins',
-              ),
-            ),
-            trailing: Text('${item.subtotal} FCFA',
-              style: const TextStyle(
-                fontWeight: FontWeight.w700, color: HollaColors.primary,
-                fontFamily: 'Poppins',
-              ),
-            ),
-          )),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+                title: Text(
+                  item.product.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Poppins',
+                  ),
+                ),
+                subtitle: Text(
+                  '${item.product.price} FCFA × ${item.quantity}',
+                  style: const TextStyle(
+                    color: HollaColors.grey500,
+                    fontFamily: 'Poppins',
+                  ),
+                ),
+                trailing: Text(
+                  '${item.subtotal} FCFA',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: HollaColors.primary,
+                    fontFamily: 'Poppins',
+                  ),
+                ),
+              )),
 
           const Divider(height: 24),
 
@@ -735,9 +792,11 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Adresse de livraison',
+                const Text(
+                  'Adresse de livraison',
                   style: TextStyle(
-                    fontWeight: FontWeight.w600, fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Poppins',
                     fontSize: 13,
                   ),
                 ),
@@ -745,16 +804,18 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
                 TextField(
                   controller: _addressController,
                   style: const TextStyle(
-                    fontFamily: 'Poppins', fontSize: 14,
+                    fontFamily: 'Poppins',
+                    fontSize: 14,
                   ),
                   decoration: InputDecoration(
                     hintText: 'Ex: Bastos, face à la pharmacie...',
                     hintStyle: const TextStyle(
                       color: HollaColors.grey500,
-                      fontFamily: 'Poppins', fontSize: 13,
+                      fontFamily: 'Poppins',
+                      fontSize: 13,
                     ),
                     prefixIcon: const Icon(Icons.location_on_outlined,
-                      color: HollaColors.primary),
+                        color: HollaColors.primary),
                     filled: true,
                     fillColor: HollaColors.grey100,
                     border: OutlineInputBorder(
@@ -777,10 +838,10 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text('Sous-total',
-                      style: TextStyle(color: HollaColors.grey500,
-                        fontFamily: 'Poppins')),
+                        style: TextStyle(
+                            color: HollaColors.grey500, fontFamily: 'Poppins')),
                     Text('${total - 500} FCFA',
-                      style: const TextStyle(fontFamily: 'Poppins')),
+                        style: const TextStyle(fontFamily: 'Poppins')),
                   ],
                 ),
                 const SizedBox(height: 6),
@@ -788,26 +849,31 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text('Frais de livraison',
-                      style: TextStyle(color: HollaColors.grey500,
-                        fontFamily: 'Poppins')),
+                        style: TextStyle(
+                            color: HollaColors.grey500, fontFamily: 'Poppins')),
                     const Text('500 FCFA',
-                      style: TextStyle(fontFamily: 'Poppins')),
+                        style: TextStyle(fontFamily: 'Poppins')),
                   ],
                 ),
                 const Divider(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Total',
+                    const Text(
+                      'Total',
                       style: TextStyle(
-                        fontWeight: FontWeight.w700, fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
                         fontFamily: 'Poppins',
                       ),
                     ),
-                    Text('$total FCFA',
+                    Text(
+                      '$total FCFA',
                       style: const TextStyle(
-                        fontWeight: FontWeight.w800, fontSize: 18,
-                        color: HollaColors.primary, fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
+                        color: HollaColors.primary,
+                        fontFamily: 'Poppins',
                       ),
                     ),
                   ],
@@ -833,22 +899,26 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
                   boxShadow: [
                     BoxShadow(
                       color: HollaColors.primary.withOpacity(0.35),
-                      blurRadius: 16, offset: const Offset(0, 6),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
                     ),
                   ],
                 ),
                 child: Center(
                   child: _loading
                       ? const SizedBox(
-                          width: 22, height: 22,
+                          width: 22,
+                          height: 22,
                           child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2.5,
+                            color: Colors.white,
+                            strokeWidth: 2.5,
                           ),
                         )
                       : const Text(
                           'Commander maintenant',
                           style: TextStyle(
-                            color: Colors.white, fontSize: 16,
+                            color: Colors.white,
+                            fontSize: 16,
                             fontWeight: FontWeight.w700,
                             fontFamily: 'Poppins',
                           ),

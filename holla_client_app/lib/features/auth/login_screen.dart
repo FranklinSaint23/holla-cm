@@ -93,12 +93,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Container(
                       height: 320,
                       width: double.infinity,
-                      decoration: BoxDecoration(
-                        borderRadius: const BorderRadius.only(
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.only(
                           bottomLeft: Radius.circular(32),
                           bottomRight: Radius.circular(32),
                         ),
-                        color: Colors.black.withOpacity(0.4),
+                        color: Color(0x66000000),
                       ),
                     ),
                     // Boutons de contrôle supérieurs (Langue & Thème)
@@ -137,7 +137,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white,
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Image.asset(
@@ -195,11 +195,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             color: Colors.white.withOpacity(0.92),
                             borderRadius: BorderRadius.circular(28),
                             border: Border.all(color: Colors.white.withOpacity(0.5)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.08),
+                            boxShadow: const [
+                              const BoxShadow(
+                                color: Colors.white,
                                 blurRadius: 20,
-                                offset: const Offset(0, 10),
+                                offset: const Offset(0, 5),
                               )
                             ],
                           ),

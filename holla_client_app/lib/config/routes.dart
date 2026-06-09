@@ -40,7 +40,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
 
       // ── Shell tabs client ────────────────────────────────
-      /*ShellRoute(
+      ShellRoute(
         builder: (context, state, child) => MainShell(child: child),
         routes: [
           GoRoute(path: '/',            builder: (_, __) => const HomeScreen()),
@@ -64,12 +64,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           orderId: state.pathParameters['id']!,
         ),
       ),
-      GoRoute(
+      /*GoRoute(
         path: '/tracking/:id',
         builder: (_, state) => TrackingScreen(
           orderId: state.pathParameters['id']!,
         ),
-      ),
+      ),*/
       GoRoute(
         path: '/payment',
         builder: (_, state) {
@@ -81,7 +81,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
-      GoRoute(
+      /*GoRoute(
         path: '/service-selection/:skill',
         builder: (_, state) => ServiceSelectionScreen(
           skill: state.pathParameters['skill']!,
