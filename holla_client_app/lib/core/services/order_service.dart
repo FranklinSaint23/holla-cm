@@ -1,7 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../main.dart';
 import '../models/order_model.dart';
-import '../models/product_model.dart'; // <─── Import direct et propre
+import '../models/product_model.dart'; 
 
 class OrderService {
   // ── Produits d'un partenaire ─────────────────────────────
