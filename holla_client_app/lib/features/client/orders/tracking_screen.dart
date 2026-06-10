@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 import '../../../core/constants/colors.dart';
 import '../../../core/models/order_model.dart';
 import '../../../core/services/order_service.dart';
+import '../../../core/services/ai_service.dart'; 
 import '../../../main.dart';
 
 // Stream position livreur en temps réel via Supabase Realtime
@@ -50,13 +51,12 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1000),
     )..repeat(reverse: true);
-
     _pulseAnim = Tween<double>(begin: 1.0, end: 1.4).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
 
     _loadOrder();
-
+    
     // Simuler déplacement livreur toutes les 4 secondes
     _etaTimer = Timer.periodic(const Duration(seconds: 4), (_) {
       if (mounted) {
@@ -65,6 +65,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen>
             _deliveryPos.latitude  + (DateTime.now().millisecond % 3 - 1) * 0.0003,
             _deliveryPos.longitude + (DateTime.now().millisecond % 3 - 1) * 0.0003,
           );
+   
           if (_eta > 0) _eta--;
         });
       }
@@ -263,6 +264,84 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen>
             ),
           ),
 
+          // ── BANNER PROMO GÉOLOCALISÉE ───────────────────
+          Positioned(
+            top: 100,
+            left: 16,
+            right: 16,
+            child: FutureBuilder<List<Map<String, dynamic>>>(
+              future: AIService().getPromotions(
+                lat: _clientPos.latitude,
+                lng: _clientPos.longitude,
+                radius: 0.5, // 500m seulement
+              ),
+              builder: (_, snap) {
+                if (!snap.hasData || snap.data!.isEmpty) return const SizedBox();
+                final promo = snap.data!.first;
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      const Text('🍕', style: TextStyle(fontSize: 20)),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${promo['partner_name']} à ${promo['distance_km']} km',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: HollaColors.grey500,
+                                fontFamily: 'Poppins',
+                              ),
+                            ),
+                            Text(
+                              promo['title'] ?? '',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                fontFamily: 'Poppins',
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: HollaColors.error,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '${promo['promo_price']} F',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+
           // ── PANEL BAS ────────────────────────────────────
           Positioned(
             bottom: 0, left: 0, right: 0,
@@ -303,9 +382,11 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen>
                         ),
                       ),
                       const SizedBox(width: 8),
-                      const Text('🛵 Votre livreur est en route',
+                      const Text(
+                        '🛵 Votre livreur est en route',
                         style: TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
                           fontFamily: 'Poppins',
                         ),
                       ),
@@ -315,9 +396,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen>
 
                   // ETA
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
                       color: HollaColors.primaryLight,
                       borderRadius: BorderRadius.circular(14),
@@ -327,17 +406,22 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen>
                         const Icon(Icons.access_time_rounded,
                           color: HollaColors.primary, size: 20),
                         const SizedBox(width: 10),
-                        const Text('Temps estimé :',
+                        const Text(
+                          'Temps estimé :',
                           style: TextStyle(
-                            color: HollaColors.grey700, fontFamily: 'Poppins',
+                            color: HollaColors.grey700,
+                            fontFamily: 'Poppins',
                             fontSize: 14,
                           ),
                         ),
                         const Spacer(),
-                        Text('~$_eta min',
+                        Text(
+                          '~$_eta min',
                           style: const TextStyle(
-                            color: HollaColors.primary, fontSize: 18,
-                            fontWeight: FontWeight.w800, fontFamily: 'Poppins',
+                            color: HollaColors.primary,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            fontFamily: 'Poppins',
                           ),
                         ),
                       ],
@@ -362,8 +446,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen>
                               shape: BoxShape.circle,
                             ),
                             child: const Center(
-                              child: Text('🛵',
-                                style: TextStyle(fontSize: 22)),
+                              child: Text('🛵', style: TextStyle(fontSize: 22)),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -375,13 +458,16 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen>
                                   _order!.deliveryAgentName!,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w700,
-                                    fontFamily: 'Poppins', fontSize: 14,
+                                    fontFamily: 'Poppins',
+                                    fontSize: 14,
                                   ),
                                 ),
-                                const Text('Votre livreur',
+                                const Text(
+                                  'Votre livreur',
                                   style: TextStyle(
                                     color: HollaColors.grey500,
-                                    fontFamily: 'Poppins', fontSize: 12,
+                                    fontFamily: 'Poppins',
+                                    fontSize: 12,
                                   ),
                                 ),
                               ],
@@ -416,10 +502,13 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen>
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('Voir les détails',
+                          Text(
+                            'Voir les détails',
                             style: TextStyle(
-                              color: HollaColors.primary, fontSize: 14,
-                              fontWeight: FontWeight.w600, fontFamily: 'Poppins',
+                              color: HollaColors.primary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Poppins',
                             ),
                           ),
                           SizedBox(width: 4),
@@ -456,7 +545,8 @@ class _ActionBtn extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: color.withOpacity(0.3),
-            blurRadius: 8, offset: const Offset(0, 3),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),

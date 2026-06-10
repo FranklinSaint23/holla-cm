@@ -13,6 +13,9 @@ import '../features/client/profile/profile_screen.dart';
 import '../features/client/home/partner_detail_screen.dart';
 import '../features/client/orders/tracking_screen.dart';
 import '../features/client/orders/payment_screen.dart';
+import '../features/client/chat/ai_assistant_screen.dart';
+import '../features/client/chat/ai_history_screen.dart';
+import '../features/client/orders/review_screen.dart';
 import '../features/client/services/service_selection_screen.dart';
 import '../shared/widgets/main_shell.dart';
 
@@ -64,12 +67,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           orderId: state.pathParameters['id']!,
         ),
       ),
-      /*GoRoute(
+      GoRoute(
         path: '/tracking/:id',
         builder: (_, state) => TrackingScreen(
           orderId: state.pathParameters['id']!,
         ),
-      ),*/
+      ),
       GoRoute(
         path: '/payment',
         builder: (_, state) {
@@ -81,12 +84,36 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
-      /*GoRoute(
+      GoRoute(
         path: '/service-selection/:skill',
         builder: (_, state) => ServiceSelectionScreen(
           skill: state.pathParameters['skill']!,
         ),
-      ), */
+      ), 
+      GoRoute(
+        path: '/ai-assistant',
+        builder: (_, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return AIAssistantScreen(
+            initialConversationId: extra?['conversationId'],
+          );
+        },
+      ),
+      GoRoute(
+        path: '/ai-history',
+        builder: (_, __) => const AIHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/review',
+        builder: (_, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          return ReviewScreen(
+            orderId:     extra['orderId'],
+            partnerId:   extra['partnerId'],
+            partnerName: extra['partnerName'],
+          );
+        },
+      ),
     ],  
   );
 }); 

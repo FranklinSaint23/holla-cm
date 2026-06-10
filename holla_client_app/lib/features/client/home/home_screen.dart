@@ -6,15 +6,40 @@ import '../../../core/models/partner_model.dart';
 import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/providers/home_provider.dart';
 import '../../../shared/widgets/skeleton_loader.dart';
+import '../../../core/services/ai_service.dart';
+
+// ── PROVIDERS IA ──
+final aiPromotionsProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, Map<String, double>>(
+  (ref, coords) async {
+    return AIService().getPromotions(lat: coords['lat']!, lng: coords['lng']!);
+  },
+);
+
+final aiSuggestionsProvider =
+    FutureProvider.family<Map<String, dynamic>?, Map<String, dynamic>>(
+  (ref, params) async {
+    return AIService().getPersonalizedFeed(
+      clientId: params['clientId'] as String,
+      lat: params['lat'] as double,
+      lng: params['lng'] as double,
+    );
+  },
+);
 
 // Catégories HOLLA — style Gojek en grille
 const _categories = [
-  {'id': 'all',        'label': 'Tout',        'emoji': '🏠', 'color': 0xFF5B2EE8},
-  {'id': 'restaurant', 'label': 'Restaurants', 'emoji': '🍽️', 'color': 0xFFFF5722},
-  {'id': 'pharmacy',   'label': 'Pharmacies',  'emoji': '💊', 'color': 0xFF00B14F},
-  {'id': 'shop',       'label': 'Boutiques',   'emoji': '🛍️', 'color': 0xFF1E88E5},
-  {'id': 'services',   'label': 'Services',    'emoji': '🔧', 'color': 0xFFFFB800},
-  {'id': 'groceries',  'label': 'Courses',     'emoji': '🛒', 'color': 0xFF00C2CB},
+  {'id': 'all', 'label': 'Tout', 'emoji': '🏠', 'color': 0xFF5B2EE8},
+  {
+    'id': 'restaurant',
+    'label': 'Restaurants',
+    'emoji': '🍽️',
+    'color': 0xFFFF5722
+  },
+  {'id': 'pharmacy', 'label': 'Pharmacies', 'emoji': '💊', 'color': 0xFF00B14F},
+  {'id': 'shop', 'label': 'Boutiques', 'emoji': '🛍️', 'color': 0xFF1E88E5},
+  {'id': 'services', 'label': 'Services', 'emoji': '🔧', 'color': 0xFFFFB800},
+  {'id': 'groceries', 'label': 'Courses', 'emoji': '🛒', 'color': 0xFF00C2CB},
 ];
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -26,7 +51,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _searchController = TextEditingController();
-  bool _isSearching = false;
 
   @override
   void dispose() {
@@ -45,9 +69,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final category = ref.watch(selectedCategoryProvider);
     final partners = ref.watch(partnersProvider(category));
-    final profile  = ref.watch(currentProfileProvider);
+    final profile = ref.watch(currentProfileProvider);
 
-    final firstName = profile.value?['name']?.toString().split(' ').first ?? 'HOLLA';
+    final firstName =
+        profile.value?['name']?.toString().split(' ').first ?? 'HOLLA';
+    
+    // Coordonnées pour l'IA
+    const lat = 3.848; // Yaoundé
+    const lng = 11.502;
+    final promoAsyncValue = ref.watch(aiPromotionsProvider({'lat': lat, 'lng': lng}));
 
     return Scaffold(
       backgroundColor: HollaColors.grey100,
@@ -70,11 +100,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
 
+          // ── NOTIFICATION EXPIRATION PROMO ─────────────────
+          promoAsyncValue.when(
+            loading: () => const SliverToBoxAdapter(child: SizedBox()),
+            error: (_, __) => const SliverToBoxAdapter(child: SizedBox()),
+            data: (promos) => SliverToBoxAdapter(
+              child: _buildPromoExpiryBanner(promos),
+            ),
+          ),
+
           // ── SERVICES EN GRILLE GOJEK ───────────────────────
           SliverToBoxAdapter(child: _buildServicesGrid()),
 
-          // ── PROMO BANNER ──────────────────────────────────
-          SliverToBoxAdapter(child: _buildPromoBanner()),
+          // ── PROMO BANNER DYNAMIQUE IA ──────────────────────
+          SliverToBoxAdapter(child: _buildPromoBanner(promoAsyncValue)),
+
+          // ── WIDGET SUGGESTIONS IA ─────────────────────────
+          SliverToBoxAdapter(
+            child: _buildAISuggestions(ref, profile.value?['id']?.toString() ?? ''),
+          ),
 
           // ── SECTION PARTENAIRES ───────────────────────────
           SliverToBoxAdapter(
@@ -86,8 +130,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const Text(
                     'Recommandés pour vous',
                     style: TextStyle(
-                      fontSize: 17, fontWeight: FontWeight.w700,
-                      color: HollaColors.dark, fontFamily: 'Poppins',
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: HollaColors.dark,
+                      fontFamily: 'Poppins',
                     ),
                   ),
                   TextButton(
@@ -128,11 +174,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   child: Column(
                     children: [
                       const Icon(Icons.wifi_off_rounded,
-                        color: HollaColors.grey300, size: 48),
+                          color: HollaColors.grey300, size: 48),
                       const SizedBox(height: 12),
-                      Text('Erreur de chargement',
+                      const Text(
+                        'Erreur de chargement',
                         style: TextStyle(
-                          color: HollaColors.grey500, fontFamily: 'Poppins',
+                          color: HollaColors.grey500,
+                          fontFamily: 'Poppins',
                         ),
                       ),
                     ],
@@ -141,15 +189,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             data: (list) => list.isEmpty
-                ? SliverToBoxAdapter(
+                ? const SliverToBoxAdapter(
                     child: Center(
                       child: Padding(
-                        padding: const EdgeInsets.all(40),
+                        padding: EdgeInsets.all(40),
                         child: Column(
                           children: [
-                            const Text('🔍', style: TextStyle(fontSize: 48)),
-                            const SizedBox(height: 12),
-                            const Text(
+                            Text('🔍', style: TextStyle(fontSize: 48)),
+                            SizedBox(height: 12),
+                            Text(
                               'Aucun partenaire trouvé',
                               style: TextStyle(
                                 color: HollaColors.grey500,
@@ -188,16 +236,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const Text(
                     'Près de vous',
                     style: TextStyle(
-                      fontSize: 17, fontWeight: FontWeight.w700,
-                      color: HollaColors.dark, fontFamily: 'Poppins',
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: HollaColors.dark,
+                      fontFamily: 'Poppins',
                     ),
                   ),
                   TextButton(
                     onPressed: () {},
-                    child: const Text('Voir tout',
+                    child: const Text(
+                      'Voir tout',
                       style: TextStyle(
-                        color: HollaColors.primary, fontWeight: FontWeight.w600,
-                        fontFamily: 'Poppins', fontSize: 13,
+                        color: HollaColors.primary,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Poppins',
+                        fontSize: 13,
                       ),
                     ),
                   ),
@@ -237,6 +290,56 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  // ── WIDGET EXPIRATION BANNER ────────────────────────────
+  Widget _buildPromoExpiryBanner(List<Map<String, dynamic>> promos) {
+    final soonExpiring = promos.where((p) {
+      try {
+        final end = DateTime.parse(p['ends_at']);
+        final diff = end.difference(DateTime.now());
+        return diff.inHours <= 2 && diff.isNegative == false;
+      } catch (_) {
+        return false;
+      }
+    }).toList();
+
+    if (soonExpiring.isEmpty) return const SizedBox();
+
+    final promo = soonExpiring.first;
+    final end = DateTime.parse(promo['ends_at']);
+    final diff = end.difference(DateTime.now());
+    final label = diff.inMinutes < 60 ? '${diff.inMinutes} min' : '${diff.inHours}h';
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: HollaColors.errorLight,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: HollaColors.error.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          const Text('⏰', style: TextStyle(fontSize: 18)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              '${promo['title']} — expire dans $label',
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: HollaColors.error,
+                fontFamily: 'Poppins',
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: HollaColors.error),
+        ],
+      ),
+    );
+  }
+
   // ── HEADER ──────────────────────────────────────────────
   Widget _buildHeader(String firstName) {
     return Container(
@@ -249,11 +352,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       child: Stack(
         children: [
-          // Cercles décoratifs
           Positioned(
-            top: -50, right: -50,
+            top: -50,
+            right: -50,
             child: Container(
-              width: 200, height: 200,
+              width: 200,
+              height: 200,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white.withOpacity(0.07),
@@ -261,16 +365,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
           Positioned(
-            top: 30, right: 60,
+            top: 30,
+            right: 60,
             child: Container(
-              width: 80, height: 80,
+              width: 80,
+              height: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white.withOpacity(0.05),
               ),
             ),
           ),
-          // Contenu
           SafeArea(
             bottom: false,
             child: Padding(
@@ -285,15 +390,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       Text(
                         '${_greeting()}, $firstName 👋',
                         style: const TextStyle(
-                          fontSize: 20, fontWeight: FontWeight.w700,
-                          color: Colors.white, fontFamily: 'Poppins',
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          fontFamily: 'Poppins',
                         ),
                       ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.location_on_rounded,
-                            color: Colors.white70, size: 14),
+                          const Icon(Icons.location_on_rounded, color: Colors.white70, size: 14),
                           const SizedBox(width: 4),
                           Text(
                             'Yaoundé, Cameroun',
@@ -303,30 +409,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               fontFamily: 'Poppins',
                             ),
                           ),
-                          const Icon(Icons.keyboard_arrow_down_rounded,
-                            color: Colors.white70, size: 16),
+                          const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white70, size: 16),
                         ],
                       ),
                     ],
                   ),
-                  // Avatar + notif
                   Row(
                     children: [
                       Stack(
                         children: [
                           Container(
-                            width: 42, height: 42,
+                            width: 42,
+                            height: 42,
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(14),
                             ),
-                            child: const Icon(Icons.notifications_outlined,
-                              color: Colors.white, size: 22),
+                            child: const Icon(Icons.notifications_outlined, color: Colors.white, size: 22),
                           ),
                           Positioned(
-                            top: 6, right: 6,
+                            top: 6,
+                            right: 6,
                             child: Container(
-                              width: 8, height: 8,
+                              width: 8,
+                              height: 8,
                               decoration: const BoxDecoration(
                                 color: HollaColors.warning,
                                 shape: BoxShape.circle,
@@ -337,13 +443,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                       const SizedBox(width: 10),
                       Container(
-                        width: 42, height: 42,
+                        width: 42,
+                        height: 42,
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child: const Icon(Icons.person_outline_rounded,
-                          color: Colors.white, size: 22),
+                        child: const Icon(Icons.person_outline_rounded, color: Colors.white, size: 22),
                       ),
                     ],
                   ),
@@ -377,26 +483,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: TextField(
           controller: _searchController,
           style: const TextStyle(
-            fontSize: 14, fontFamily: 'Poppins', color: HollaColors.dark,
+            fontSize: 14,
+            fontFamily: 'Poppins',
+            color: HollaColors.dark,
           ),
           decoration: InputDecoration(
             hintText: 'Restaurants, pharmacies, services...',
             hintStyle: const TextStyle(
-              color: HollaColors.grey500, fontSize: 14, fontFamily: 'Poppins',
+              color: HollaColors.grey500,
+              fontSize: 14,
+              fontFamily: 'Poppins',
             ),
-            prefixIcon: const Icon(Icons.search_rounded,
-              color: HollaColors.grey500, size: 22),
+            prefixIcon: const Icon(Icons.search_rounded, color: HollaColors.grey500, size: 22),
             suffixIcon: _searchController.text.isNotEmpty
                 ? IconButton(
-                    icon: const Icon(Icons.close_rounded,
-                      color: HollaColors.grey500, size: 20),
+                    icon: const Icon(Icons.close_rounded, color: HollaColors.grey500, size: 20),
                     onPressed: () {
                       _searchController.clear();
                       setState(() {});
                     },
                   )
-                : const Icon(Icons.tune_rounded,
-                    color: HollaColors.primary, size: 22),
+                : const Icon(Icons.tune_rounded, color: HollaColors.primary, size: 22),
             border: InputBorder.none,
             contentPadding: const EdgeInsets.symmetric(vertical: 14),
           ),
@@ -417,8 +524,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           const Text(
             'Nos Services',
             style: TextStyle(
-              fontSize: 16, fontWeight: FontWeight.w700,
-              color: HollaColors.dark, fontFamily: 'Poppins',
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: HollaColors.dark,
+              fontFamily: 'Poppins',
             ),
           ),
           const SizedBox(height: 16),
@@ -433,60 +542,54 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             itemCount: _categories.length,
             itemBuilder: (_, i) {
-              final cat   = _categories[i];
+              final cat = _categories[i];
               final color = Color(cat['color'] as int);
               final isSelected = ref.watch(selectedCategoryProvider) == cat['id'];
-
               return GestureDetector(
                 onTap: () {
-                  ref.read(selectedCategoryProvider.notifier).state =
-                      cat['id'] as String;
+                  ref.read(selectedCategoryProvider.notifier).state = cat['id'] as String;
                 },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        width: 56, height: 56,
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? color
-                              : color.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: isSelected
-                              ? [BoxShadow(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: isSelected ? color : color.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
                                   color: color.withOpacity(0.4),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
-                                )]
-                              : null,
-                        ),
-                        child: Center(
-                          child: Text(
-                            cat['emoji'] as String,
-                            style: const TextStyle(fontSize: 26),
-                          ),
+                                )
+                              ]
+                            : null,
+                      ),
+                      child: Center(
+                        child: Text(
+                          cat['emoji'] as String,
+                          style: const TextStyle(fontSize: 26),
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        cat['label'] as String,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: isSelected
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                          color: isSelected ? color : HollaColors.grey700,
-                          fontFamily: 'Poppins',
-                        ),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      cat['label'] as String,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                        color: isSelected ? color : HollaColors.grey700,
+                        fontFamily: 'Poppins',
                       ),
-                    ],
-                  ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                ),
+                  ],
                 ),
               );
             },
@@ -497,8 +600,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  // ── PROMO BANNER ──────────────────────────────────────
-  Widget _buildPromoBanner() {
+  // ── METHODE PROMO BANNER MODIFIÉE ───────────────────────
+  Widget _buildPromoBanner(AsyncValue<List<Map<String, dynamic>>> promosState) {
+    return promosState.when(
+      loading: () => _buildStaticBanner(),
+      error: (_, __) => _buildStaticBanner(),
+      data: (list) {
+        if (list.isEmpty) return _buildStaticBanner();
+        return SizedBox(
+          height: 150,
+          child: PageView.builder(
+            padEnds: false,
+            controller: PageController(viewportFraction: 0.88),
+            itemCount: list.length,
+            itemBuilder: (_, i) {
+              final promo = list[i];
+              return _PromoCard(promo: promo);
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStaticBanner() {
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       height: 130,
@@ -519,11 +644,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       child: Stack(
         children: [
-          // Cercle décoratif
           Positioned(
-            right: -20, top: -20,
+            right: -20,
+            top: -20,
             child: Container(
-              width: 120, height: 120,
+              width: 120,
+              height: 120,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white.withOpacity(0.1),
@@ -540,9 +666,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 3,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(8),
@@ -550,7 +674,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: const Text(
                           '🎉 OFFRE SPÉCIALE',
                           style: TextStyle(
-                            color: Colors.white, fontSize: 10,
+                            color: Colors.white,
+                            fontSize: 10,
                             fontWeight: FontWeight.w700,
                             fontFamily: 'Poppins',
                           ),
@@ -560,9 +685,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       const Text(
                         'Livraison gratuite\nsur votre 1ère commande',
                         style: TextStyle(
-                          color: Colors.white, fontSize: 16,
+                          color: Colors.white,
+                          fontSize: 16,
                           fontWeight: FontWeight.w700,
-                          fontFamily: 'Poppins', height: 1.3,
+                          fontFamily: 'Poppins',
+                          height: 1.3,
                         ),
                       ),
                     ],
@@ -570,6 +697,215 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 const Text('🛵', style: TextStyle(fontSize: 56)),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── WIDGET SUGGESTIONS IA ─────────────────────────────────
+  Widget _buildAISuggestions(WidgetRef ref, String userId) {
+    final feed = ref.watch(aiSuggestionsProvider({
+      'clientId': userId,
+      'lat': 3.848,
+      'lng': 11.502,
+    }));
+
+    return feed.when(
+      loading: () => const SizedBox(),
+      error: (_, __) => const SizedBox(),
+      data: (data) {
+        if (data == null) return const SizedBox();
+        final favorites = data['favorites'] as List? ?? [];
+        final timeLabel = data['time_label'] as String? ?? '';
+        if (favorites.isEmpty) return const SizedBox();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: HollaColors.primaryLight,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      timeLabel,
+                      style: const TextStyle(
+                        color: HollaColors.primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'Vos favoris',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              height: 80,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                itemCount: favorites.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 12),
+                itemBuilder: (_, i) {
+                  final partnerMap = favorites[i] as Map<String, dynamic>;
+                  final partner = PartnerModel.fromJson(partnerMap);
+                  return _NearbyCard(
+                    partner: partner,
+                    onTap: () => context.push('/partner/${partner.id}'),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+// ── COMPOSANT AUXILIAIRE POUR LES PROMOS IA ─────────────────
+class _PromoCard extends StatelessWidget {
+  final Map<String, dynamic> promo;
+  const _PromoCard({required this.promo});
+
+  @override
+  Widget build(BuildContext context) {
+    final promoPrice = promo['promo_price'] as int?;
+    final originalPrice = promo['original_price'] as int?;
+    final discount = promoPrice != null && originalPrice != null
+        ? ((originalPrice - promoPrice) / originalPrice * 100).round()
+        : null;
+
+    return Container(
+      margin: const EdgeInsets.only(right: 12, left: 4, top: 16, bottom: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.07),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Image
+          ClipRRect(
+            borderRadius: const BorderRadius.horizontal(left: Radius.circular(20)),
+            child: promo['image_url'] != null
+                ? Image.network(
+                    promo['image_url'],
+                    width: 120,
+                    height: double.infinity,
+                    fit: BoxFit.cover,
+                  )
+                : Container(
+                    width: 120,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [HollaColors.primary, HollaColors.secondary],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: const Center(
+                      child: Text('🍽️', style: TextStyle(fontSize: 40)),
+                    ),
+                  ),
+          ),
+
+          // Infos
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (discount != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: HollaColors.error,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '-$discount%',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 6),
+                  Text(
+                    promo['title'] ?? '',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Poppins',
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    promo['partner_name'] ?? '',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: HollaColors.grey500,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Text(
+                        '${promoPrice ?? ''} FCFA',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: HollaColors.primary,
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                      if (originalPrice != null) ...[
+                        const SizedBox(width: 6),
+                        Text(
+                          '$originalPrice F',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: HollaColors.grey500,
+                            fontFamily: 'Poppins',
+                            decoration: TextDecoration.lineThrough,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -604,117 +940,21 @@ class _PartnerCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(20),
-                  ),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                   child: partner.imageUrl != null
                       ? Image.network(
                           partner.imageUrl!,
-                          height: 120, width: 200,
+                          height: 120,
+                          width: 200,
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => _placeholder(),
                         )
                       : _placeholder(),
                 ),
-                // Badge ouvert/fermé
-                Positioned(
-                  top: 10, left: 10,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: partner.isOpen
-                          ? HollaColors.success
-                          : HollaColors.error,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      partner.isOpen ? '● Ouvert' : '● Fermé',
-                      style: const TextStyle(
-                        color: Colors.white, fontSize: 10,
-                        fontWeight: FontWeight.w700, fontFamily: 'Poppins',
-                      ),
-                    ),
-                  ),
-                ),
-                // Badge vérifié
-                if (partner.isVerified)
-                  Positioned(
-                    top: 10, right: 10,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(Icons.verified_rounded,
-                        color: HollaColors.info, size: 14),
-                    ),
-                  ),
               ],
-            ),
-            // Infos
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    partner.businessName,
-                    style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.w700,
-                      color: HollaColors.dark, fontFamily: 'Poppins',
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(Icons.star_rounded,
-                        color: HollaColors.warning, size: 14),
-                      const SizedBox(width: 3),
-                      Text(
-                        partner.rating.toStringAsFixed(1),
-                        style: const TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.w600,
-                          color: HollaColors.dark, fontFamily: 'Poppins',
-                        ),
-                      ),
-                      Text(
-                        ' · ${partner.deliveryTime ?? 30} min',
-                        style: const TextStyle(
-                          fontSize: 11, color: HollaColors.grey500,
-                          fontFamily: 'Poppins',
-                        ),
-                      ),
-                      if (partner.distance != null)
-                        Text(
-                          ' · ${partner.distance!.toStringAsFixed(1)} km',
-                          style: const TextStyle(
-                            fontSize: 11, color: HollaColors.grey500,
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
-                    ],
-                  ),
-                  if (partner.minOrder != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      'Min: ${partner.minOrder} FCFA',
-                      style: const TextStyle(
-                        fontSize: 11, color: HollaColors.primary,
-                        fontWeight: FontWeight.w600, fontFamily: 'Poppins',
-                      ),
-                    ),
-                  ],
-                ],
-              ),
             ),
           ],
         ),
@@ -724,17 +964,15 @@ class _PartnerCard extends StatelessWidget {
 
   Widget _placeholder() {
     return Container(
-      height: 120, width: 200,
-      color: HollaColors.primaryLight,
-      child: const Center(
-        child: Icon(Icons.storefront_rounded,
-          color: HollaColors.primary, size: 36),
-      ),
+      height: 120,
+      width: 200,
+      color: HollaColors.grey100,
+      child: const Icon(Icons.storefront, color: HollaColors.grey300),
     );
   }
 }
 
-// ── NEARBY CARD VERTICALE ────────────────────────────────
+// ── NEARBY CARD VERTICALE ─────────────────────────────────
 class _NearbyCard extends StatelessWidget {
   final PartnerModel partner;
   final VoidCallback onTap;
@@ -752,101 +990,42 @@ class _NearbyCard extends StatelessWidget {
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.04),
-              blurRadius: 8, offset: const Offset(0, 2),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Row(
           children: [
-            // Image
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: partner.imageUrl != null
-                  ? Image.network(
-                      partner.imageUrl!,
-                      width: 64, height: 64, fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _placeholder(),
-                    )
-                  : _placeholder(),
+                  ? Image.network(partner.imageUrl!, width: 64, height: 64, fit: BoxFit.cover)
+                  : Container(
+                      width: 64,
+                      height: 64,
+                      color: HollaColors.grey100,
+                      child: const Icon(Icons.storefront)),
             ),
             const SizedBox(width: 12),
-            // Infos
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    partner.businessName,
-                    style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.w700,
-                      color: HollaColors.dark, fontFamily: 'Poppins',
-                    ),
-                    maxLines: 1, overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    partner.address,
-                    style: const TextStyle(
-                      fontSize: 12, color: HollaColors.grey500,
-                      fontFamily: 'Poppins',
-                    ),
-                    maxLines: 1, overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 6),
+                  Text(partner.businessName,
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontFamily: 'Poppins')),
                   Row(
                     children: [
-                      const Icon(Icons.star_rounded,
-                        color: HollaColors.warning, size: 13),
-                      const SizedBox(width: 2),
-                      Text(
-                        partner.rating.toStringAsFixed(1),
-                        style: const TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.w600,
-                          fontFamily: 'Poppins',
-                        ),
-                      ),
-                      Text(
-                        ' · ${partner.deliveryTime ?? 30} min',
-                        style: const TextStyle(
-                          fontSize: 11, color: HollaColors.grey500,
-                          fontFamily: 'Poppins',
-                        ),
-                      ),
-                      if (partner.distance != null)
-                        Text(
-                          ' · ${partner.distance!.toStringAsFixed(1)} km',
-                          style: const TextStyle(
-                            fontSize: 11, color: HollaColors.grey500,
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
+                      const Icon(Icons.star_rounded, color: HollaColors.warning, size: 14),
+                      Text('${partner.rating} · ${partner.distance?.toStringAsFixed(1) ?? "0.0"} km'),
                     ],
                   ),
                 ],
               ),
             ),
-            // Chevron
-            Container(
-              width: 32, height: 32,
-              decoration: BoxDecoration(
-                color: HollaColors.primaryLight,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.chevron_right_rounded,
-                color: HollaColors.primary, size: 18),
-            ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _placeholder() {
-    return Container(
-      width: 64, height: 64,
-      color: HollaColors.primaryLight,
-      child: const Icon(Icons.storefront_rounded,
-        color: HollaColors.primary, size: 28),
     );
   }
 }
